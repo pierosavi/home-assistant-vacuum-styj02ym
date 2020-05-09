@@ -124,6 +124,8 @@ ALL_PROPS = ["run_state", "mode", "err_state", "battary_life", "box_type", "mop_
             "side_brush_life", "side_brush_hours", "main_brush_life", "main_brush_hours", "hypa_life", "hypa_hours", "mop_life", "mop_hours", "water_percent",
             "hw_info", "sw_info", "start_time", "order_time", "v_state", "zone_data", "repeat_state", "light_state", "is_charge", "is_work", "cur_mapid", "mop_route", "map_num"]
 
+VACUUM_CARD_PROPS_REFERENCES =  {'main_brush_left': 'main_brush_hours', 'side_brush_left': 'side_brush_hours', 'filter_left': 'hypa_hours',
+                                'sensor_dirty_left': 'mop_hours', 'cleaned_area': 's_area', 'cleaning_time': 's_time'}
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
   """Set up the Xiaomi vacuum cleaner robot platform."""
@@ -254,36 +256,6 @@ class MiroboVacuum2(StateVacuumDevice):
     """Flag vacuum cleaner robot features that are supported."""
     return SUPPORT_XIAOMI
 
-  @property
-  def main_brush_left(self):
-    if self.vacuum_state is not None:
-      return self.vacuum_state['main_brush_hours']
-
-  @property
-  def side_brush_left(self):
-    if self.vacuum_state is not None:
-      return self.vacuum_state['side_brush_hours']
-
-  @property
-  def filter_left(self):
-    if self.vacuum_state is not None:
-      return self.vacuum_state['hypa_hours']
-
-  @property
-  def sensor_dirty_left(self):
-    if self.vacuum_state is not None:
-      return self.vacuum_state['mop_hours']
-
-  @property
-  def cleaned_area(self):
-    if self.vacuum_state is not None:
-      return self.vacuum_state['s_area'] 
-      
-  @property
-  def cleaning_time(self):
-    if self.vacuum_state is not None:
-      return self.vacuum_state['s_time']
-
   async def _try_command(self, mask_error, func, *args, **kwargs):
     """Call a vacuum command handling error messages."""
     try:
@@ -400,6 +372,9 @@ class MiroboVacuum2(StateVacuumDevice):
       state = self._vacuum.raw_command('get_prop', ALL_PROPS)
 
       self.vacuum_state = dict(zip(ALL_PROPS, state))
+
+      for prop in VACUUM_CARD_PROPS_REFERENCES.keys():
+        self.vacuum_state[prop] = self.vacuum_state[VACUUM_CARD_PROPS_REFERENCES[prop]]
 
       self._available = True
       
